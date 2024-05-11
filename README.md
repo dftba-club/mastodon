@@ -35,6 +35,10 @@ Click below to **learn more** in a video:
 
 [youtube_demo]: https://www.youtube.com/watch?v=IPSbNdBmWKE
 
+| :warning: This is a fork specific for the dftba.club instance. |
+|:---------------------------------------------------------------|
+| This won't work for anyone else right out of the box.          |
+
 ## Navigation
 
 - [Project homepage 🐘](https://joinmastodon.org)
