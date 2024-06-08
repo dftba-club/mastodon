@@ -23,6 +23,7 @@ gem 'fog-core', '<= 2.4.0'
 gem 'fog-openstack', '~> 1.0', require: false
 gem 'kt-paperclip', '~> 7.2'
 gem 'md-paperclip-azure', '~> 2.2', require: false
+gem 'ruby-vips', '~> 2.2', require: false
 
 gem 'active_model_serializers', '~> 0.10'
 gem 'addressable', '~> 2.8'
@@ -102,6 +103,8 @@ gem 'json-ld-preloaded', '~> 3.2'
 gem 'rdf-normalize', '~> 0.5'
 
 gem 'private_address_check', '~> 0.5'
+
+gem 'opentelemetry-api', '~> 1.2.5'
 
 group :opentelemetry do
   gem 'opentelemetry-exporter-otlp', '~> 0.26.3', require: false
