@@ -126,21 +126,21 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
   
-  prom_statsd:
-    image: prom/statsd-exporter
-    container_name: mastodon_statsd
-    command: "--statsd.mapping-config=/tmp/statsd_mapping.conf"
-    expose:
-      - 9125/udp
-      - 9102/tcp
-    depends_on:
-      - web
-    restart: unless-stopped
-    hostname: mastostats
-    networks:
-      - backend
-    volumes:
-      - ./statsd/statsd-mapping.yaml:/tmp/statsd_mapping.conf
+  #prom_statsd:
+  #  image: prom/statsd-exporter
+  #  container_name: mastodon_statsd
+  #  command: "--statsd.mapping-config=/tmp/statsd_mapping.conf"
+  #  expose:
+  #    - 9125/udp
+  #    - 9102/tcp
+  #  depends_on:
+  #    - web
+  #  restart: unless-stopped
+  #  hostname: mastostats
+  #  networks:
+  #    - backend
+  #  volumes:
+  #    - ./statsd/statsd-mapping.yaml:/tmp/statsd_mapping.conf
 
   sidekiq_exporter:
     image: strech/sidekiq-prometheus-exporter
