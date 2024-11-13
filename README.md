@@ -89,7 +89,7 @@ Mastodon acts as an OAuth2 provider, so 3rd party apps can use the REST and Stre
 
 - **PostgreSQL** 12+
 - **Redis** 4+
-- **Ruby** 3.1+
+- **Ruby** 3.2+
 - **Node.js** 18+
 - **Node.js** 18+
 
