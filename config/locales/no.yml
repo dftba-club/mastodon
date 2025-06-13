@@ -729,7 +729,6 @@
         preamble: Å fremheve interessant innhold er viktig i ombordstigning av nye brukere som kanskje ikke kjenner noen Mastodon. Kontroller hvordan ulike oppdagelsesfunksjoner fungerer på serveren.
         profile_directory: Profilkatalog
         public_timelines: Offentlige tidslinjer
-        publish_discovered_servers: Publiser liste over oppdagede servere
         publish_statistics: Publiser statistikk
         title: Oppdagelse
         trends: Trender
@@ -1789,7 +1788,6 @@
       post_action: Sett sammen
       post_step: Si hallo til verdenen med tekst, bilder, videoer, eller meningsmålinger.
       post_title: Lag ditt første innlegg
-      share_action: Del
       share_step: La vennene dine vite hvordan finne deg på Mastodon.
       share_title: Del Mastadon-profilen din
       sign_in_action: Logg inn
