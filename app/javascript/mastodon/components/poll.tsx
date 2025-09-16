@@ -109,7 +109,6 @@ export const Poll: React.FC<PollProps> = ({ pollId, disabled, status }) => {
         openModal({
           modalType: 'INTERACTION',
           modalProps: {
-            type: 'vote',
             accountId: status.getIn(['account', 'id']),
             url: status.get('uri'),
           },
@@ -318,7 +317,7 @@ const PollOption: React.FC<PollOptionProps> = (props) => {
               id='check'
               icon={CheckIcon}
               className='poll__voted__mark'
-              title={intl.formatMessage(messages.voted)}
+              aria-label={intl.formatMessage(messages.voted)}
             />
           </span>
         )}
