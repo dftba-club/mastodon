@@ -83,7 +83,7 @@ Click below to **learn more** in a video:
 ### Requirements
 
 - **Ruby** 3.2+
-- **PostgreSQL** 13+
+- **PostgreSQL** 14+
 - **Redis** 7.0+
 - **Node.js** 20+
 
