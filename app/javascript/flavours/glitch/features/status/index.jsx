@@ -161,7 +161,7 @@ class Status extends ImmutablePureComponent {
 
   componentDidMount () {
     attachFullscreenListener(this.onFullScreenChange);
-    this.props.dispatch(fetchStatus(this.props.params.statusId));
+    this.props.dispatch(fetchStatus(this.props.params.statusId, { forceFetch: true }));
     this._scrollStatusIntoView();
   }
 
@@ -170,7 +170,7 @@ class Status extends ImmutablePureComponent {
     let updated = false;
 
     if (props.params.statusId && state.statusId !== props.params.statusId) {
-      props.dispatch(fetchStatus(props.params.statusId));
+      props.dispatch(fetchStatus(props.params.statusId, { forceFetch: true }));
       update.threadExpanded = undefined;
       update.statusId = props.params.statusId;
       updated = true;
@@ -327,6 +327,12 @@ class Status extends ImmutablePureComponent {
       );
     }
     dispatch(openModal({ modalType: 'COMPOSE_PRIVACY', modalProps: { statusId, onChange: handleChange } }));
+  };
+
+  handleQuote = (status) => {
+    const { dispatch } = this.props;
+
+    dispatch(quoteComposeById(status.get('id')));
   };
 
   handleEditClick = (status) => {
@@ -624,7 +630,7 @@ class Status extends ImmutablePureComponent {
           showBackButton
           multiColumn={multiColumn}
           extraButton={(
-            <button type='button' className='column-header__button' title={intl.formatMessage(!isExpanded ? messages.revealAll : messages.hideAll)} aria-label={intl.formatMessage(!isExpanded ? messages.revealAll : messages.hideAll)} onClick={this.handleToggleAll}><Icon id={!isExpanded ? 'eye-slash' : 'eye'} icon={isExpanded ? VisibilityOffIcon : VisibilityIcon} /></button>
+            <button type='button' className='column-header__button' title={intl.formatMessage(!isExpanded ? messages.revealAll : messages.hideAll)} aria-label={intl.formatMessage(!isExpanded ? messages.revealAll : messages.hideAll)} onClick={this.handleToggleAll}><Icon id={!isExpanded ? 'eye' : 'eye-slash'} icon={isExpanded ? VisibilityIcon : VisibilityOffIcon} /></button>
           )}
         />
 
@@ -659,6 +665,7 @@ class Status extends ImmutablePureComponent {
                   onDelete={this.handleDeleteClick}
                   onRevokeQuote={this.handleRevokeQuoteClick}
                   onQuotePolicyChange={this.handleQuotePolicyChange}
+                  onQuote={this.handleQuote}
                   onEdit={this.handleEditClick}
                   onDirect={this.handleDirectClick}
                   onMention={this.handleMentionClick}
