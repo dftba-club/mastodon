@@ -3,38 +3,33 @@ import { useCallback, useEffect } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useLocation, useParams } from 'react-router';
+import { useHistory, useLocation, useParams } from 'react-router';
+import { Link } from 'react-router-dom';
 
 import { openModal } from '@/flavours/glitch/actions/modal';
-import { useRelationship } from '@/flavours/glitch/hooks/useRelationship';
+import { useAccountHandle } from '@/flavours/glitch/components/display_name/default';
 import ListAltIcon from '@/material-icons/400-24px/list_alt.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import type { ApiCollectionJSON } from 'flavours/glitch/api_types/collections';
-import { Account } from 'flavours/glitch/components/account';
-import { Avatar } from 'flavours/glitch/components/avatar';
+import { Badge } from 'flavours/glitch/components/badge';
+import { Callout } from 'flavours/glitch/components/callout';
 import { Column } from 'flavours/glitch/components/column';
 import { ColumnHeader } from 'flavours/glitch/components/column_header';
-import {
-  DisplayName,
-  LinkedDisplayName,
-} from 'flavours/glitch/components/display_name';
+import { DisplayName } from 'flavours/glitch/components/display_name';
 import { IconButton } from 'flavours/glitch/components/icon_button';
-import ScrollableList from 'flavours/glitch/components/scrollable_list';
-import { Tag } from 'flavours/glitch/components/tags/tag';
+import { Scrollable } from 'flavours/glitch/components/scrollable_list/components';
 import { useAccount } from 'flavours/glitch/hooks/useAccount';
-import { me } from 'flavours/glitch/initial_state';
+import { domain, me } from 'flavours/glitch/initial_state';
 import { fetchCollection } from 'flavours/glitch/reducers/slices/collections';
 import { useAppDispatch, useAppSelector } from 'flavours/glitch/store';
 
-import { CollectionMetaData } from './collection_list_item';
-import { CollectionMenu } from './collection_menu';
+import { CollectionMenu } from '../components/collection_menu';
+
+import { CollectionAccountsList } from './accounts_list';
+import { useConfirmRevoke } from './revoke_collection_inclusion_modal';
 import classes from './styles.module.scss';
 
 const messages = defineMessages({
-  empty: {
-    id: 'collections.accounts.empty_title',
-    defaultMessage: 'This collection is empty',
-  },
   loading: {
     id: 'collections.detail.loading',
     defaultMessage: 'Loading collection…',
@@ -43,47 +38,66 @@ const messages = defineMessages({
     id: 'collections.detail.share',
     defaultMessage: 'Share this collection',
   },
-  accounts: {
-    id: 'collections.detail.accounts_heading',
-    defaultMessage: 'Accounts',
-  },
 });
 
-export const AuthorNote: React.FC<{ id: string; previewMode?: boolean }> = ({
-  id,
-  // When previewMode is enabled, your own display name
-  // will not be replaced with "you"
-  previewMode = false,
-}) => {
+export const AuthorNote: React.FC<{ id: string }> = ({ id }) => {
   const account = useAccount(id);
+  const authorHandle = useAccountHandle(account, domain);
+
+  if (!account) {
+    return null;
+  }
+
   const author = (
-    <span className={classes.displayNameWithAvatar}>
-      <Avatar size={18} account={account} />
-      {previewMode ? (
-        <DisplayName account={account} variant='simple' />
-      ) : (
-        <LinkedDisplayName displayProps={{ account, variant: 'simple' }} />
-      )}
-    </span>
+    <Link to={`/@${account.acct}`} data-hover-card-account={account.id}>
+      {authorHandle}
+    </Link>
   );
 
-  const displayAsYou = id === me && !previewMode;
+  return (
+    <p className={classes.authorNote}>
+      <FormattedMessage
+        id='collections.by_account'
+        defaultMessage='by {account_handle}'
+        values={{
+          account_handle: author,
+        }}
+      />
+    </p>
+  );
+};
+
+const RevokeControls: React.FC<{
+  collection: ApiCollectionJSON;
+}> = ({ collection }) => {
+  const authorAccount = useAccount(collection.account_id);
+  const confirmRevoke = useConfirmRevoke(collection);
 
   return (
-    <p className={previewMode ? classes.previewAuthorNote : classes.authorNote}>
-      {displayAsYou ? (
+    <Callout
+      title={
         <FormattedMessage
-          id='collections.detail.curated_by_you'
-          defaultMessage='Curated by you'
+          id='collections.detail.you_are_in_this_collection'
+          defaultMessage="You're featured in this collection"
         />
-      ) : (
+      }
+      primaryLabel={
         <FormattedMessage
-          id='collections.detail.curated_by_author'
-          defaultMessage='Curated by {author}'
-          values={{ author }}
+          id='collections.detail.revoke_inclusion'
+          defaultMessage='Remove me'
         />
-      )}
-    </p>
+      }
+      onPrimary={confirmRevoke}
+    >
+      <FormattedMessage
+        id='collections.detail.author_added_you_on_date'
+        defaultMessage='{author} added you on {date}'
+        values={{
+          author: <DisplayName account={authorAccount} variant='simple' />,
+          date: '{date}', // TODO: Data not yet provided by API
+        }}
+      />
+    </Callout>
   );
 };
 
@@ -91,8 +105,15 @@ const CollectionHeader: React.FC<{ collection: ApiCollectionJSON }> = ({
   collection,
 }) => {
   const intl = useIntl();
-  const { name, description, tag, account_id } = collection;
+  const { name, description, tag, account_id, items } = collection;
   const dispatch = useAppDispatch();
+  const history = useHistory();
+
+  const isOwnCollection = account_id === me;
+  const currentUserIndex = items.findIndex(
+    (account) => account.account_id === me,
+  );
+  const isCurrentUserInCollection = !isOwnCollection && currentUserIndex > -1;
 
   const handleShare = useCallback(() => {
     dispatch(
@@ -105,23 +126,23 @@ const CollectionHeader: React.FC<{ collection: ApiCollectionJSON }> = ({
     );
   }, [collection, dispatch]);
 
-  const location = useLocation<{ newCollection?: boolean }>();
-  const wasJustCreated = location.state.newCollection;
+  const location = useLocation<{ newCollection?: boolean } | undefined>();
+  const isNewCollection = location.state?.newCollection;
   useEffect(() => {
-    if (wasJustCreated) {
+    if (isNewCollection) {
+      // Replace with current pathname to clear `newCollection` state
+      history.replace(location.pathname);
       handleShare();
     }
-  }, [handleShare, wasJustCreated]);
+  }, [history, handleShare, isNewCollection, location.pathname]);
 
   return (
-    <div className={classes.header}>
+    <header className={classes.header}>
       <div className={classes.titleWithMenu}>
         <div className={classes.titleWrapper}>
-          {tag && (
-            // TODO: Make non-interactive tag component
-            <Tag name={tag.name} className={classes.tag} />
-          )}
+          {tag && <Badge label={`#${tag.name}`} icon={null} />}
           <h2 className={classes.name}>{name}</h2>
+          <AuthorNote id={account_id} />
         </div>
         <div className={classes.headerButtonWrapper}>
           <IconButton
@@ -139,37 +160,9 @@ const CollectionHeader: React.FC<{ collection: ApiCollectionJSON }> = ({
         </div>
       </div>
       {description && <p className={classes.description}>{description}</p>}
-      <AuthorNote id={collection.account_id} />
-      <CollectionMetaData
-        extended={account_id === me}
-        collection={collection}
-        className={classes.metaData}
-      />
-      <h2 className='sr-only'>{intl.formatMessage(messages.accounts)}</h2>
-    </div>
+      {isCurrentUserInCollection && <RevokeControls collection={collection} />}
+    </header>
   );
-};
-
-const CollectionAccountItem: React.FC<{
-  accountId: string | undefined;
-  collectionOwnerId: string;
-}> = ({ accountId, collectionOwnerId }) => {
-  const relationship = useRelationship(accountId);
-
-  if (!accountId) {
-    return null;
-  }
-
-  // When viewing your own collection, only show the Follow button
-  // for accounts you're not following (anymore).
-  // Otherwise, always show the follow button in its various states.
-  const withoutButton =
-    accountId === me ||
-    !relationship ||
-    (collectionOwnerId === me &&
-      (relationship.following || relationship.requested));
-
-  return <Account minimal={withoutButton} withMenu={false} id={accountId} />;
 };
 
 export const CollectionDetailPage: React.FC<{
@@ -181,7 +174,6 @@ export const CollectionDetailPage: React.FC<{
   const collection = useAppSelector((state) =>
     id ? state.collections.collections[id] : undefined,
   );
-
   const isLoading = !!id && !collection;
 
   useEffect(() => {
@@ -202,24 +194,10 @@ export const CollectionDetailPage: React.FC<{
         multiColumn={multiColumn}
       />
 
-      <ScrollableList
-        scrollKey='collection-detail'
-        emptyMessage={intl.formatMessage(messages.empty)}
-        showLoading={isLoading}
-        bindToDocument={!multiColumn}
-        alwaysPrepend
-        prepend={
-          collection ? <CollectionHeader collection={collection} /> : null
-        }
-      >
-        {collection?.items.map(({ account_id }) => (
-          <CollectionAccountItem
-            key={account_id}
-            accountId={account_id}
-            collectionOwnerId={collection.account_id}
-          />
-        ))}
-      </ScrollableList>
+      <Scrollable>
+        {collection && <CollectionHeader collection={collection} />}
+        <CollectionAccountsList collection={collection} isLoading={isLoading} />
+      </Scrollable>
 
       <Helmet>
         <title>{pageTitle}</title>
