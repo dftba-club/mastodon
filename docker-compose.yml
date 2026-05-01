@@ -145,3 +145,5 @@ services:
       - backend
     hostname: es-export
     env_file: .env.production
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
