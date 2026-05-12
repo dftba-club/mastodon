@@ -1,3 +1,6 @@
+> [!WARNING]
+> **This repository is archived.** The dftba.club instance now runs directly from [glitch-soc/mastodon](https://github.com/glitch-soc/mastodon) upstream. No further changes will be made here.
+
 # Mastodon Glitch Edition
 
 [![Ruby Testing](https://github.com/glitch-soc/mastodon/actions/workflows/test-ruby.yml/badge.svg)](https://github.com/glitch-soc/mastodon/actions/workflows/test-ruby.yml)
